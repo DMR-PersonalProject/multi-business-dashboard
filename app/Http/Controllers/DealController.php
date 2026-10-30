@@ -9,7 +9,7 @@ class DealController extends Controller
     // Display all deals
     public function index()
 {
-    $deals = Deal::with('dealItems')->orderBy('created_at', 'desc')->get();
+    $deals = Deal::with('items')->orderBy('created_at', 'desc')->get();
     return view('general.uddesign.uddeals', compact('deals'));
 }
 

@@ -222,7 +222,7 @@
             <h5 class="modal-title text-center fw-bold mb-0 mt-4" id="customDateModalLabel" style="font-size: 1.5rem; letter-spacing: 2px;">Select Date Range</h5>
             <hr class="align-self-center mt-2 mb-2 opacity-100" style="width:40%;">
             <div class="modal-body" style="font-size: 1.2rem; letter-spacing: 1.5px;">
-                <form action="{{$actionRoute}}" method="GET">
+                <form action="{{ $actionRoute ?? url()->current() }}" method="GET">
                     @csrf
                     <input type="hidden" name="interval" value="custom">
                     <div class="form-group mb-3">
