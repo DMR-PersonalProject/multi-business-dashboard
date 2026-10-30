@@ -104,6 +104,13 @@ These changes were made before the baseline commit, so they are already part of 
 - **Change:** as the owner, on an empty in-memory database, the test opens every Kuwago One, Kuwago Two and UDDesign page, the executive and weather pages, the deals, feedback, accounts, promos, target sales and business pages, and the settings page, and expects each to load. It also checks that the gauge shows a 0 target when no target is displayed and that `/uddesignfeedback` redirects. The feedback pages are tested without Google service mocks.
 - **Commit:** _added in a later commit_
 
+### 12. Factories for every model, with obviously fake data
+
+- **Problem:** only users, deals, deal items, promos, feedback, target sales and budget allocations had factories. They used Faker's realistic personal names, phone numbers and emails on real-looking domains, external placeholder image URLs, and fixed 2023–2024 dates. The report, menu, expense, print, merch and business-profile models had no factories.
+- **Files:** `database/factories/` (new: `BusinessInfoFactory`, `KuwagoOneReportFactory`, `KuwagoTwoReportFactory`, `UddesignReportFactory`, `Restaurant/*`, `KuwagoOne/*`, `KuwagoTwo/*`, `Uddesign/*`; updated: `UserFactory`, `DealFactory`, `DealItemFactory`, `PromoFactory`, `FeedbackFactory`, `UddesignFeedbackFactory`, `TargetSalesFactory`, `BudgetAllocationFactory`)
+- **Change:** every model has a factory. Kuwago One and Kuwago Two share base factories in `database/factories/Restaurant`. Related keys follow the controllers' joins (for example, an order line's `dish_id` points to `dishes.id`, and an expense entry's `expense_type_id` points to `expense_types.expense_type_id`). People are "Demo User", "Demo Client" or "Demo Guest" with a number, emails use `example.com`, phone numbers use `0900-555-xxxx`, promos have no image, and dates fall in the last 12 months. No migrations or models were changed.
+- **Commit:** _added in a later commit_
+
 ## Known issues
 
 These were confirmed while testing the changes above and are not fixed yet.

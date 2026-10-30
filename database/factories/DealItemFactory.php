@@ -14,13 +14,12 @@ class DealItemFactory extends Factory
     {
         return [
             'deal_id' => Deal::factory(),
-            'description' => $this->faker->sentence,
-            'quantity' => $this->faker->numberBetween(1, 100),
-            'unit_price' => $this->faker->randomFloat(2, 50, 500),
+            'description' => $this->faker->randomElement(['Custom printed T-shirt', 'Tarpaulin 3x6 ft', 'Sublimated mug', 'Die-cut stickers (sheet)', 'Embroidered cap']),
+            'quantity' => $this->faker->numberBetween(5, 100),
+            'unit_price' => $this->faker->randomElement([45, 80, 150, 220, 350, 450]),
             'total_price' => function (array $attributes) {
                 return $attributes['quantity'] * $attributes['unit_price'];
             },
         ];
     }
 }
-

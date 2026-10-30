@@ -5,27 +5,34 @@ namespace Database\Factories;
 use App\Models\Deal;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * Fake custom-order deal for UDDesign. Clients, emails and phone numbers are
+ * obviously fake (example.com, 0900-555 numbers).
+ */
 class DealFactory extends Factory
 {
     protected $model = Deal::class;
 
     public function definition()
     {
+        $n = $this->faker->unique()->numberBetween(1, 9999);
+        $grand = $this->faker->numberBetween(20, 400) * 50;
+        $approved = $this->faker->dateTimeBetween('-12 months', '-1 month');
+
         return [
-            'deal_name' => $this->faker->words(3, true),
-            'client_name' => $this->faker->name,
-            'contact_number' => $this->faker->phoneNumber,
-            'email' => $this->faker->email,
-            'date_approved' => $this->faker->optional()->date(),
-            'production_due_date' => $this->faker->optional()->date(),
-            'payment_method' => $this->faker->randomElement(['Cash', 'GCash', 'Cash_GCash']),
-            'cash' => $this->faker->optional()->randomFloat(2, 100, 5000),
-            'gcash' => $this->faker->optional()->randomFloat(2, 100, 5000),
-            'cash_gcash' => $this->faker->optional()->randomFloat(2, 100, 5000),
-            'date_closed' => $this->faker->optional()->date(),
-            'grand_price' => $this->faker->randomFloat(2, 1000, 10000),
-            'status' => $this->faker->randomElement(['Open', 'Processing', 'Closed', 'On-Hold', 'Cancelled']),
-            'created_at' => fake()->dateTimeBetween('2023-01-01', '2024-12-30')->format('Y-m-d')
+            'deal_name' => $this->faker->randomElement(['Team Shirts', 'Event Tarpaulins', 'Giveaway Mugs', 'Sticker Pack', 'Uniform Batch']).' #'.$n,
+            'client_name' => sprintf('Demo Client %03d', $n),
+            'contact_number' => sprintf('0900-555-%04d', $n),
+            'email' => sprintf('client%03d@example.com', $n),
+            'date_approved' => $approved->format('Y-m-d'),
+            'production_due_date' => (clone $approved)->modify('+10 days')->format('Y-m-d'),
+            'payment_method' => 'Cash',
+            'cash' => $grand,
+            'gcash' => 0,
+            'cash_gcash' => 0,
+            'date_closed' => (clone $approved)->modify('+12 days')->format('Y-m-d'),
+            'grand_price' => $grand,
+            'status' => 'Closed',
         ];
     }
 }

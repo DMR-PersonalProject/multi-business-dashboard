@@ -6,24 +6,21 @@ use App\Models\TargetSales;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\TargetSales>
+ * One calendar month for one business.
  */
 class TargetSalesFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     protected $model = TargetSales::class;
 
     public function definition()
     {
+        $month = now()->subMonths($this->faker->numberBetween(0, 11))->startOfMonth();
+
         return [
             'business_type' => $this->faker->randomElement(['UdDesign', 'Kuwago1', 'Kuwago2']),
-            'amount' => $this->faker->randomFloat(2, 1000, 10000), // amount between 1000 and 10000
-            'start_date' => $this->faker->date('Y-m-d', '2024-01-01'),
-            'end_date' => $this->faker->date('Y-m-d', '2024-12-31'),
+            'amount' => $this->faker->numberBetween(300000, 600000),
+            'start_date' => $month->toDateString(),
+            'end_date' => $month->copy()->endOfMonth()->toDateString(),
         ];
     }
 }
