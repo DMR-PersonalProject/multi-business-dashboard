@@ -11,18 +11,12 @@ use Illuminate\Support\Facades\Log;
 
 class UddesignFeedbackController extends Controller
 {
-    protected $googleSheetsService;
-
-    public function __construct(UdGoogleSheetsService $googleSheetsService)
-    {
-        $this->googleSheetsService = $googleSheetsService;
-    }
-
     // Reads and checks every sheet row first; replaces stored feedback only if all are valid.
     public function fetchAndStoreFeedback()
     {
         try {
-            $feedbackData = $this->googleSheetsService->getSheetData('Uddesign!A2:F');
+            // Resolved here so the list pages work without the service-account file
+            $feedbackData = app(UdGoogleSheetsService::class)->getSheetData('Uddesign!A2:F');
         } catch (\Throwable $e) {
             Log::warning('UDDesign feedback import failed: '.$e->getMessage());
             return redirect()->route('general.uddesign.feedbacks')->with('failed', 'Could not read the feedback sheet. No data was changed.');
@@ -54,19 +48,8 @@ class UddesignFeedbackController extends Controller
 
     public function index()
     {
-        $feedback = UddesignFeedback::orderBy('feedback_date', 'desc')->get();
-        $averageRating = $feedback->avg('rating');
-
-        // Calculate the number of votes for each rating (1 to 5)
-        $ratingCounts = [
-            1 => $feedback->where('rating', 1)->count(),
-            2 => $feedback->where('rating', 2)->count(),
-            3 => $feedback->where('rating', 3)->count(),
-            4 => $feedback->where('rating', 4)->count(),
-            5 => $feedback->where('rating', 5)->count(),
-        ];
-
-        return view('general.uddesign.feedbacks', compact('feedback', 'averageRating', 'ratingCounts'));
+        // The feedbacks view needs the interval data UddesignController builds
+        return redirect()->route('general.uddesign.feedbacks');
     }
 
 

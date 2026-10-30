@@ -12,13 +12,6 @@ use App\Support\SheetFeedbackRows;
 
 class FeedbackController extends Controller
 {
-    protected $googleSheetService;
-
-    public function __construct(GoogleSheetService $googleSheetService)
-    {
-        $this->googleSheetService = $googleSheetService;
-    }
-
     public function importFeedbackOne()
     {
         return $this->replaceFeedback('Kuwago1!A2:F', 'general.kuwago-one.feedbacks');
@@ -36,7 +29,8 @@ class FeedbackController extends Controller
     private function replaceFeedback(string $range, string $redirectRoute)
     {
         try {
-            $data = $this->googleSheetService->getSheetData($range);
+            // Resolved here so the list pages work without the service-account file
+            $data = app(GoogleSheetService::class)->getSheetData($range);
         } catch (\Throwable $e) {
             Log::warning('Feedback import failed: '.$e->getMessage());
             return redirect()->route($redirectRoute)->with('failed', 'Could not read the feedback sheet. No data was changed.');

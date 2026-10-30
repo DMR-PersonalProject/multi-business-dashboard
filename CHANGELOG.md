@@ -88,11 +88,19 @@ These changes were made before the baseline commit, so they are already part of 
 - **Change:** the footer form falls back to the current page address when `$actionRoute` isn't set, and the deals list loads the `items` relation.
 - **Commit:** _added in a later commit_
 
+### 10. Feedback list pages no longer need the Google key files, and `/uddesignfeedback` redirects
+
+- **Problem:** the feedback controllers created the Google Sheets client in their constructors, so the plain list pages `/feedback` and `/uddesignfeedback` failed with a server error on any install without the service-account key files, even though they only show rows already in the database. `/uddesignfeedback` also rendered the UDDesign feedback view without the interval data that view needs (`$votes`, the comment lists, `$actionRoute`), so it failed even with the key files present. Nothing in the app links to that page.
+- **Files:** `app/Http/Controllers/FeedbackController.php`, `app/Http/Controllers/UddesignFeedbackController.php`
+- **Change:**
+  - The Google Sheets services are created only inside the import actions, within their existing error handling. A missing key file now shows the usual "could not read the sheet" message and changes no data.
+  - `/uddesignfeedback` redirects to `/uddesign/feedbacks`, the working UDDesign feedback page in the sidebar, which shows the same data with date filters.
+- **Commit:** _added in a later commit_
+
 ## Known issues
 
 These were confirmed while testing the changes above and are not fixed yet.
 
 - **UDDesign feedback date filter:** the UDDesign feedback page sends its date filter to the Kuwago feedback route. Because that route now requires a Kuwago role, the filter is refused for users with the `uddesign` role. Owner and general users get Kuwago feedback in the filtered results instead of UDDesign feedback.
-- **Standalone page that shows an error:** the old `/uddesignfeedback` page fails with a server error because its view expects data the controller doesn't pass. The UDDesign feedback page in the sidebar (`/uddesign/feedbacks`) works.
 - **Displayed target ignores the business:** the Kuwago One dashboard shows whichever target sale is marked as displayed, without checking its business type, so a Kuwago Two or UDDesign target can appear on the Kuwago One gauge. Only one target can be displayed at a time.
 - **Starter tests:** some of Laravel Breeze's original tests (`tests/Feature/Auth`, `tests/Feature/ProfileTest.php`) fail because this app disabled registration and changed the profile routes.
