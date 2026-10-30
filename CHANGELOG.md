@@ -79,14 +79,14 @@ These changes were made before the baseline commit, so they are already part of 
 - **Problem:** on a fresh database, or whenever no target sale was marked as displayed, the Kuwago One dashboard and the `/fetch-target-sale` page failed with "Attempt to read property 'amount' on null". When a target was displayed, the gauge computed target ÷ sales instead of sales ÷ target, so it showed 500% when sales were at 20% of the target, and it divided by zero when there were no sales.
 - **Files:** `resources/views/general/kuwago-one/dashboard-content.blade.php`, `resources/views/general/kuwago-one/sale.blade.php`
 - **Change:** a missing target counts as 0, and the gauge then shows 0%. Otherwise the gauge shows sales ÷ target × 100, capped at 100%. There is no division when the target is 0.
-- **Commit:** _added in a later commit_
+- **Commit:** [`026a473`](https://github.com/DMR-PersonalProject/multi-business-dashboard/commit/026a473224569ad91ca5b4fdfbe9bb32de5a4cef)
 
 ### 9. The deals list pages open again
 
 - **Problem:** `/deals` and `/uddesign/uddeals` failed with "Undefined variable $actionRoute" because the shared footer's date-filter form needs a variable these pages don't set. Once deals existed, `/deals` also failed because it loaded a `dealItems` relation that doesn't exist (the relation is `items`).
 - **Files:** `resources/views/general/footer.blade.php`, `app/Http/Controllers/DealController.php`
 - **Change:** the footer form falls back to the current page address when `$actionRoute` isn't set, and the deals list loads the `items` relation.
-- **Commit:** _added in a later commit_
+- **Commit:** [`efc0a41`](https://github.com/DMR-PersonalProject/multi-business-dashboard/commit/efc0a4161e029b3b147fde84bc7c73aa46ac6172)
 
 ### 10. Feedback list pages no longer need the Google key files, and `/uddesignfeedback` redirects
 
@@ -95,21 +95,21 @@ These changes were made before the baseline commit, so they are already part of 
 - **Change:**
   - The Google Sheets services are created only inside the import actions, within their existing error handling. A missing key file now shows the usual "could not read the sheet" message and changes no data.
   - `/uddesignfeedback` redirects to `/uddesign/feedbacks`, the working UDDesign feedback page in the sidebar, which shows the same data with date filters.
-- **Commit:** _added in a later commit_
+- **Commit:** [`b195424`](https://github.com/DMR-PersonalProject/multi-business-dashboard/commit/b19542487fa5023bd4a7b6f4f3bffd9fba4022a2)
 
 ### 11. Tests: every page opens on an empty database
 
 - **Problem:** nothing checked that the dashboards and list pages work before any data has been synced, which is how changes 8 to 10 went unnoticed.
 - **Files:** `tests/Feature/EmptyDatabasePagesTest.php`
 - **Change:** as the owner, on an empty in-memory database, the test opens every Kuwago One, Kuwago Two and UDDesign page, the executive and weather pages, the deals, feedback, accounts, promos, target sales and business pages, and the settings page, and expects each to load. It also checks that the gauge shows a 0 target when no target is displayed and that `/uddesignfeedback` redirects. The feedback pages are tested without Google service mocks.
-- **Commit:** _added in a later commit_
+- **Commit:** [`722a4bc`](https://github.com/DMR-PersonalProject/multi-business-dashboard/commit/722a4bcc8fbd59f6a886f1fe33695b56f10c4a6a)
 
 ### 12. Factories for every model, with obviously fake data
 
 - **Problem:** only users, deals, deal items, promos, feedback, target sales and budget allocations had factories. They used Faker's realistic personal names, phone numbers and emails on real-looking domains, external placeholder image URLs, and fixed 2023–2024 dates. The report, menu, expense, print, merch and business-profile models had no factories.
 - **Files:** `database/factories/` (new: `BusinessInfoFactory`, `KuwagoOneReportFactory`, `KuwagoTwoReportFactory`, `UddesignReportFactory`, `Restaurant/*`, `KuwagoOne/*`, `KuwagoTwo/*`, `Uddesign/*`; updated: `UserFactory`, `DealFactory`, `DealItemFactory`, `PromoFactory`, `FeedbackFactory`, `UddesignFeedbackFactory`, `TargetSalesFactory`, `BudgetAllocationFactory`)
 - **Change:** every model has a factory. Kuwago One and Kuwago Two share base factories in `database/factories/Restaurant`. Related keys follow the controllers' joins (for example, an order line's `dish_id` points to `dishes.id`, and an expense entry's `expense_type_id` points to `expense_types.expense_type_id`). People are "Demo User", "Demo Client" or "Demo Guest" with a number, emails use `example.com`, phone numbers use `0900-555-xxxx`, promos have no image, and dates fall in the last 12 months. No migrations or models were changed.
-- **Commit:** _added in a later commit_
+- **Commit:** [`450fce5`](https://github.com/DMR-PersonalProject/multi-business-dashboard/commit/450fce50511fa7d8227fbd51090def2f689f309a)
 
 ### 13. Seeders create 12 months of fake demo data
 
@@ -122,7 +122,7 @@ These changes were made before the baseline commit, so they are already part of 
   - `DatabaseSeeder` calls `UserSeeder` and the demo seeders in dependency order. Every seeder refuses to run when `APP_ENV=production`, and each demo seeder skips its tables if they already contain data.
   - `UserSeeder` also fills fake profile details (name, initial, `0900-555` phone, description) on the demo accounts, only where they are empty, so profile edits survive a password reseed.
   - The README describes the demo data as fake and for demos only, and explains fresh installs and `migrate:fresh --seed`.
-- **Commit:** _added in a later commit_
+- **Commit:** [`d0f6638`](https://github.com/DMR-PersonalProject/multi-business-dashboard/commit/d0f6638d05fc00edf315cde5bef9c447f1461b97)
 
 ## Known issues
 
