@@ -97,10 +97,18 @@ These changes were made before the baseline commit, so they are already part of 
   - `/uddesignfeedback` redirects to `/uddesign/feedbacks`, the working UDDesign feedback page in the sidebar, which shows the same data with date filters.
 - **Commit:** _added in a later commit_
 
+### 11. Tests: every page opens on an empty database
+
+- **Problem:** nothing checked that the dashboards and list pages work before any data has been synced, which is how changes 8 to 10 went unnoticed.
+- **Files:** `tests/Feature/EmptyDatabasePagesTest.php`
+- **Change:** as the owner, on an empty in-memory database, the test opens every Kuwago One, Kuwago Two and UDDesign page, the executive and weather pages, the deals, feedback, accounts, promos, target sales and business pages, and the settings page, and expects each to load. It also checks that the gauge shows a 0 target when no target is displayed and that `/uddesignfeedback` redirects. The feedback pages are tested without Google service mocks.
+- **Commit:** _added in a later commit_
+
 ## Known issues
 
 These were confirmed while testing the changes above and are not fixed yet.
 
 - **UDDesign feedback date filter:** the UDDesign feedback page sends its date filter to the Kuwago feedback route. Because that route now requires a Kuwago role, the filter is refused for users with the `uddesign` role. Owner and general users get Kuwago feedback in the filtered results instead of UDDesign feedback.
+- **`/business/{id}` has no page:** `business` is registered as a full resource route, but `BusinessInfoController` has no `show()` method, so opening `/business/1` fails with a server error. Nothing in the app links to it; the business list and edit pages work.
 - **Displayed target ignores the business:** the Kuwago One dashboard shows whichever target sale is marked as displayed, without checking its business type, so a Kuwago Two or UDDesign target can appear on the Kuwago One gauge. Only one target can be displayed at a time.
 - **Starter tests:** some of Laravel Breeze's original tests (`tests/Feature/Auth`, `tests/Feature/ProfileTest.php`) fail because this app disabled registration and changed the profile routes.
