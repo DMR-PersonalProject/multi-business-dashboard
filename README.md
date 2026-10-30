@@ -37,7 +37,7 @@ Each business has its own dashboard for sales, expenses, promos or deals, and cu
 ## Prerequisites
 
 - Windows 10 or 11
-- PHP 8.2 or newer, with the `pdo_mysql`, `mbstring`, `openssl`, `fileinfo` and `curl` extensions enabled
+- PHP 8.2 or 8.3, with the `pdo_mysql`, `pdo_sqlite`, `mbstring`, `openssl`, `fileinfo`, `gd` and `curl` extensions enabled (on PHP 8.4, see Troubleshooting)
 - Composer 2
 - Node.js 18 or newer, with npm
 - MySQL 8
@@ -72,10 +72,11 @@ php artisan key:generate
 
 php artisan migrate
 php artisan db:seed
-php artisan db:seed --class=UserSeeder
 ```
 
-`php artisan db:seed` adds sample target sales and budget allocations for 2023 and 2024. `UserSeeder` adds the demo accounts and has to be run separately.
+`php artisan db:seed` creates the demo accounts and adds sample target sales and budget allocations for 2023 and 2024.
+
+If `SEED_USER_PASSWORD` is empty in `.env`, the seeder generates a random demo password and **prints it once** in the output. Copy it right away; it is not saved anywhere else. The seeder refuses to run when `APP_ENV=production`.
 
 ## Configuration
 
@@ -84,6 +85,7 @@ Open `.env` and set the values below. Everything else can keep the default from 
 | Setting | What to put there |
 |---|---|
 | `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | Your MySQL database and login (default `dashboard_main`, `root`, empty) |
+| `SEED_USER_PASSWORD` | Optional. Password for the demo accounts. Leave empty to get a random one printed once when you seed |
 | `UDDESIGN_API_URL`, `UDDESIGN_API_EMAIL`, `UDDESIGN_API_PASSWORD` | Address and login of the UDDesign app's API |
 | `KUWAGO_ONE_API_URL`, `KUWAGO_ONE_API_EMAIL`, `KUWAGO_ONE_API_PASSWORD` | Address and login of the Kuwago One app's API |
 | `KUWAGO_TWO_API_URL`, `KUWAGO_TWO_API_EMAIL`, `KUWAGO_TWO_API_PASSWORD` | Address and login of the Kuwago Two app's API |
@@ -104,7 +106,7 @@ For **local demo use only**. Change the passwords or remove these accounts befor
 | kuwago@example.com | kuwago |
 | uddesign@example.com | uddesign |
 
-The passwords are set in `database/seeders/UserSeeder.php`.
+All four accounts get the same password: the value of `SEED_USER_PASSWORD`, or the random password printed once by `php artisan db:seed`. To get a new password, run the seeder again (see Troubleshooting).
 
 ## Running the app
 
@@ -128,12 +130,14 @@ Open http://127.0.0.1:8000 and log in. For a one-time production-style build, ru
 
 | Role | What the user can open |
 |---|---|
-| owner | Everything: all three businesses, the executive dashboard, user accounts, promos, target sales and budget allocations |
-| general | Kuwago One, Kuwago Two and UDDesign |
-| kuwago | Kuwago One and Kuwago Two |
-| uddesign | UDDesign |
+| owner | Everything: all three businesses, the executive dashboard, user accounts, promos, target sales and budget allocations, and the data refresh and feedback import buttons |
+| general | Kuwago One, Kuwago Two and UDDesign (including deals and feedback) |
+| kuwago | Kuwago One and Kuwago Two (including their feedback) |
+| uddesign | UDDesign (including deals and feedback) |
 
-There is no public sign-up page. The owner creates accounts under **Accounts**.
+There is no public sign-up page. The owner creates accounts under **Accounts**. Users can edit their own profile under settings, but only the owner can change a user's role.
+
+Profile pictures, business images and logos must be JPG, PNG, GIF or WebP images of up to 2 MB.
 
 ### Kuwago One and Kuwago Two
 
@@ -162,10 +166,11 @@ Open `/executive`. It compares sales, expenses and deals across all three busine
 ## Data sync
 
 - When a user logs in, the app logs in to each business API with the credentials from `.env` and keeps the API tokens in the session.
-- The **refresh** buttons call `GET /api/refresh-data/{type}` (`uddesign`, `kuwago_one` or `kuwago_two`). This **deletes the local data for that business and reloads it** from the API.
-- Feedback is reloaded from Google Sheets through `/feedback/import-one`, `/feedback/import-two` and `/uddesignfeedback/fetch`. These also replace the existing feedback.
+- The **refresh** button in the footer (owner only) **replaces the local data for that business** with fresh data from its API. On a feedback page, the same button reloads the feedback from Google Sheets.
+- Everything is downloaded and checked first. If an API or the sheet returns an error or incomplete data, nothing is changed and an error message is shown. Otherwise the old rows are replaced in one step.
+- Refresh and import are limited to 5 per minute. Other roles see a button that only reloads the page.
 
-> **Warning:** `GET api/refresh-data/{type}` has no login check and changes data. The feedback import links don't require login either. Only run this app on a trusted local machine, and back up your database before you refresh.
+> Back up your database before refreshing if you have data you can't get back from the business apps.
 
 ## Project structure
 
@@ -179,6 +184,7 @@ app/
   Listeners/LoginSuccessful.php         gets API tokens at login
   Models/                               Eloquent models (per-business folders)
   Services/                             Google Sheets services
+  Support/                              upload and feedback-sheet helpers
 database/
   migrations/  seeders/  factories/
 resources/views/
@@ -196,7 +202,15 @@ public/
 php artisan test
 ```
 
-> **Warning:** the feature tests reset the database (`RefreshDatabase`), and `phpunit.xml` does not switch to a separate test database. Running the tests **wipes the database named in `.env`**. Create a separate test database and point the tests to it (for example with a `.env.testing` file) before you run them.
+The tests run on an in-memory SQLite database (set in `phpunit.xml`), so they never touch your MySQL data. As a safety net, the tests stop with an error unless the database is in-memory SQLite or its name ends in `_test`. The tests don't need `.env` or `npm run build`.
+
+The security tests are in `tests\Feature\Security`. Run only those with:
+
+```powershell
+php artisan test tests/Feature/Security
+```
+
+Some of Laravel Breeze's original starter tests in `tests\Feature\Auth` and `tests\Feature\ProfileTest.php` currently fail, because this app disabled registration and changed the profile routes.
 
 ## Troubleshooting
 
@@ -206,11 +220,24 @@ php artisan test
 | `Unknown database 'dashboard_main'` | Create the database (see MySQL note) |
 | `No application encryption key has been specified` | Run `php artisan key:generate` |
 | `Vite manifest not found` | Run `npm run dev` or `npm run build` |
-| Can't log in | Run `php artisan db:seed --class=UserSeeder` |
+| Can't log in / lost the demo password | Run `php artisan db:seed --class=UserSeeder` again. It resets the four demo accounts and prints a new password once (or uses `SEED_USER_PASSWORD`) |
+| `composer install` fails on PHP 8.4 (paratest requires PHP 8.2 or 8.3) | Use PHP 8.3, or run `composer install --ignore-platform-req=php` |
+| No refresh button, or it only reloads the page | Data refresh and feedback import are for the owner account only |
+| `419 Page Expired` after clicking refresh | Your session expired. Reload the page, log in again and retry |
+| `429 Too Many Requests` | Refresh and import are limited to 5 per minute. Wait a minute |
+| "The user image field must be…" | Use a JPG, PNG, GIF or WebP image of up to 2 MB |
 | Dashboards are empty | The business APIs aren't configured or reachable. Check the `*_API_URL` values, then log out and back in |
 | "API token not found in session" | Log out and back in so new API tokens are fetched |
 | Settings changes don't apply | Run `php artisan config:clear` |
 | `php` or `composer` isn't recognized | Add PHP and Composer to your Windows `PATH`, or use the Laragon terminal |
+
+## Post-submission changes
+
+The project as submitted for the capstone is tagged [`v1.0.0-capstone-submission`](https://github.com/DMR-PersonalProject/multi-business-dashboard/releases/tag/v1.0.0-capstone-submission). Changes made after that tag (mainly security fixes and tests) are listed in [CHANGELOG.md](CHANGELOG.md).
+
+## Development and AI assistance
+
+The baseline is the tag `v1.0.0-capstone-submission`. After it, Claude Code (an AI coding assistant by Anthropic) helped with follow-up adjustments such as security and bug fixes, tests and documentation. These are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ## Authors
 
