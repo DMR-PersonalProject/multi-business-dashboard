@@ -43,7 +43,6 @@ class UserAccountController extends Controller
             'suffix' => 'nullable|string',
             'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
             'phone_number' => 'required|string|max:255',
-            'role' => 'required|string',
         ];
         
         

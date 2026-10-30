@@ -76,27 +76,10 @@
                         <div class="row">
                             <div class="col-lg-5">
                                 <div class="dropdown">
-                                    @if ($user->role == 'owner')
-                                    <select class="form-control" id="roleSelect" name="role" onchange="syncRole()">
-                                        <option value="owner" {{ $user->role == 'owner' ? 'selected' : '' }}>Owner</option>
+                                    {{-- Read-only: only the owner can change roles, from account management. --}}
+                                    <select class="form-control" id="roleSelect" disabled>
+                                        <option selected>{{ ucfirst($user->role) }}</option>
                                     </select>
-
-                                    @elseif ($user->role == 'general')
-                                    <select class="form-control" id="roleSelect" name="role" onchange="syncRole()">
-                                        <option value="general" {{ $user->role == 'general' ? 'selected' : '' }}>General</option>
-                                    </select>
-
-                                    @elseif ($user->role == 'kuwago')
-                                    <select class="form-control" id="roleSelect" name="role" onchange="syncRole()">
-                                        <option value="kuwago" {{ $user->role == 'kuwago' ? 'selected' : '' }}>Kuwago</option>
-                                    </select>
-
-                                    @elseif ($user->role == 'uddesign')
-                                    <select class="form-control" id="roleSelect" name="role" onchange="syncRole()">
-                                        <option value="uddesign" {{ $user->role == 'uddesign' ? 'selected' : '' }}>Uddesign</option>
-                                    </select>
-
-                                    @endif
                                 </div>
                             </div>
                             <div class="col-lg-2"></div>
@@ -183,31 +166,6 @@
     }
 </script>
 
-<script>
-    function syncRole() {
-        var roleSelect = document.getElementById("roleSelect");
-        var roleDisplay2 = document.getElementById("roleDisplay2");
-        var roleDisplay = document.getElementById("roleDisplay");
-        var selectedRole = roleSelect.value;
-
-        var roleText = "";
-        switch (selectedRole) {
-            case "owner":
-                roleText = "Business owner";
-                break;
-            case "general":
-                roleText = "Finance Officer";
-                break;
-            case "kuwago":
-            case "uddesign":
-                roleText = "Operational Manager";
-                break;
-        }
-
-        roleDisplay2.innerText = roleText;
-        roleDisplay.innerText = roleText;
-    }
-</script>
 @endsection
 
 

@@ -24,3 +24,10 @@ These changes were made before the baseline commit, so they are already part of 
 - **Files:** `phpunit.xml`, `tests/TestCase.php`, `tests/Unit/TestDatabaseGuardTest.php`, `tests/Feature/Security/TestDatabaseTest.php`
 - **Change:** tests are forced onto an in-memory SQLite database. Before any migration runs, the test setup checks the database and stops with an error unless it is in-memory SQLite or its name ends in `_test`. Tests also use a random app key and no built Vite assets, so they run without `.env` or `npm run build`.
 - **Commit:** _pending_
+
+### 2. Users can no longer change their own role
+
+- **Problem:** the "my account" settings form accepted a role value and saved it, so any logged-in user could give themselves the owner role and full access.
+- **Files:** `app/Http/Controllers/UserAccountController.php`, `resources/views/settings/account-edit.blade.php`, `tests/Feature/Security/SelfRoleChangeTest.php`
+- **Change:** the settings update no longer accepts or saves a role. The role is shown read-only on the settings page. Only the owner can change roles, from account management.
+- **Commit:** _pending_
