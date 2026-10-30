@@ -1221,9 +1221,10 @@
             var ctx = document.getElementById('gaugeChart').getContext('2d');
 
             // Values for the chart
-            var targetSaleAmount = {{ $targetSale->amount }};
-            var totalSales = {{ $totalSales }};
-            var percentage = (targetSaleAmount / totalSales) * 100;
+            var targetSaleAmount = {{ (float) ($targetSale->amount ?? 0) }};
+            var totalSales = {{ (float) ($totalSales ?? 0) }};
+            // Progress toward the target, 0% when there is no target
+            var percentage = targetSaleAmount > 0 ? Math.min(100, Math.round((totalSales / targetSaleAmount) * 100)) : 0;
 
             var gaugeChart = new Chart(ctx, {
                 type: 'doughnut',

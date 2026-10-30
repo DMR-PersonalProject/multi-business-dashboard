@@ -74,10 +74,18 @@ These changes were made before the baseline commit, so they are already part of 
 - **Change:** all five feedback views escape these fields with a small `escapeHtml()` helper before inserting them, so script text is shown as plain text.
 - **Commit:** [`1248561`](https://github.com/DMR-PersonalProject/multi-business-dashboard/commit/1248561faf0f4b7c70d4dcba7337c649bc4d3fba)
 
+### 8. The Kuwago One target gauge works without a displayed target, and shows the right percentage
+
+- **Problem:** on a fresh database, or whenever no target sale was marked as displayed, the Kuwago One dashboard and the `/fetch-target-sale` page failed with "Attempt to read property 'amount' on null". When a target was displayed, the gauge computed target ÷ sales instead of sales ÷ target, so it showed 500% when sales were at 20% of the target, and it divided by zero when there were no sales.
+- **Files:** `resources/views/general/kuwago-one/dashboard-content.blade.php`, `resources/views/general/kuwago-one/sale.blade.php`
+- **Change:** a missing target counts as 0, and the gauge then shows 0%. Otherwise the gauge shows sales ÷ target × 100, capped at 100%. There is no division when the target is 0.
+- **Commit:** _added in a later commit_
+
 ## Known issues
 
 These were confirmed while testing the changes above and are not fixed yet.
 
 - **UDDesign feedback date filter:** the UDDesign feedback page sends its date filter to the Kuwago feedback route. Because that route now requires a Kuwago role, the filter is refused for users with the `uddesign` role. Owner and general users get Kuwago feedback in the filtered results instead of UDDesign feedback.
 - **Standalone pages that show an error:** the old `/deals` list page and the old `/uddesignfeedback` page fail with a server error because their views expect data the controllers don't pass. The UDDesign feedback page in the sidebar (`/uddesign/feedbacks`) works.
+- **Displayed target ignores the business:** the Kuwago One dashboard shows whichever target sale is marked as displayed, without checking its business type, so a Kuwago Two or UDDesign target can appear on the Kuwago One gauge. Only one target can be displayed at a time.
 - **Starter tests:** some of Laravel Breeze's original tests (`tests/Feature/Auth`, `tests/Feature/ProfileTest.php`) fail because this app disabled registration and changed the profile routes.
