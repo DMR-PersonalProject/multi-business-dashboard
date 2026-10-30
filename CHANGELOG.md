@@ -111,6 +111,19 @@ These changes were made before the baseline commit, so they are already part of 
 - **Change:** every model has a factory. Kuwago One and Kuwago Two share base factories in `database/factories/Restaurant`. Related keys follow the controllers' joins (for example, an order line's `dish_id` points to `dishes.id`, and an expense entry's `expense_type_id` points to `expense_types.expense_type_id`). People are "Demo User", "Demo Client" or "Demo Guest" with a number, emails use `example.com`, phone numbers use `0900-555-xxxx`, promos have no image, and dates fall in the last 12 months. No migrations or models were changed.
 - **Commit:** _added in a later commit_
 
+### 13. Seeders create 12 months of fake demo data
+
+- **Problem:** `php artisan db:seed` only created the demo accounts and one target sale and budget allocation per day for 2023 and 2024. Every dashboard was empty until the business APIs were set up and refreshed, and the Kuwago One gauge had no displayed target.
+- **Files:** `database/seeders/DatabaseSeeder.php`, `database/seeders/UserSeeder.php`, `database/seeders/Demo/*`, `tests/Feature/DemoSeederTest.php`, `README.md`
+- **Change:**
+  - `php artisan migrate:fresh --seed` fills every data table with about 12 calendar months of **fake** data ending today, in a few seconds: menus, order lines, expenses and daily reports for both Kuwago restaurants, print and merch sales, expenses, reports and custom-order deals for UDDesign, promos, feedback, business profiles, and monthly target sales and budget allocations. The current month's Kuwago One target is marked as displayed.
+  - Totals agree across tables. Report sales and expenses equal the sum of that day's order and expense lines, and UDDesign custom sales equal the deals closed that day.
+  - Faker uses a fixed seed, so the data is the same on every run (relative to today). Nothing comes from the business APIs, Google Sheets or any other external source.
+  - `DatabaseSeeder` calls `UserSeeder` and the demo seeders in dependency order. Every seeder refuses to run when `APP_ENV=production`, and each demo seeder skips its tables if they already contain data.
+  - `UserSeeder` also fills fake profile details (name, initial, `0900-555` phone, description) on the demo accounts, only where they are empty, so profile edits survive a password reseed.
+  - The README describes the demo data as fake and for demos only, and explains fresh installs and `migrate:fresh --seed`.
+- **Commit:** _added in a later commit_
+
 ## Known issues
 
 These were confirmed while testing the changes above and are not fixed yet.

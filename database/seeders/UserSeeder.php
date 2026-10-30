@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -11,13 +12,13 @@ use RuntimeException;
 class UserSeeder extends Seeder
 {
     /**
-     * Demo accounts, one per role.
+     * Demo accounts, one per role. Profile details are fake (0900-555 numbers).
      */
     public const USERS = [
-        ['name' => 'Owner', 'email' => 'admin@example.com', 'role' => 'owner'],
-        ['name' => 'General', 'email' => 'general@example.com', 'role' => 'general'],
-        ['name' => 'Kuwago', 'email' => 'kuwago@example.com', 'role' => 'kuwago'],
-        ['name' => 'Uddesign', 'email' => 'uddesign@example.com', 'role' => 'uddesign'],
+        ['name' => 'Owner', 'email' => 'admin@example.com', 'role' => 'owner', 'first_name' => 'Demo', 'last_name' => 'Owner', 'phone_number' => '0900-555-0001', 'description' => 'Demo owner account'],
+        ['name' => 'General', 'email' => 'general@example.com', 'role' => 'general', 'first_name' => 'Demo', 'last_name' => 'Finance', 'phone_number' => '0900-555-0002', 'description' => 'Demo finance officer account'],
+        ['name' => 'Kuwago', 'email' => 'kuwago@example.com', 'role' => 'kuwago', 'first_name' => 'Demo', 'last_name' => 'Kuwago', 'phone_number' => '0900-555-0003', 'description' => 'Demo Kuwago manager account'],
+        ['name' => 'Uddesign', 'email' => 'uddesign@example.com', 'role' => 'uddesign', 'first_name' => 'Demo', 'last_name' => 'Uddesign', 'phone_number' => '0900-555-0004', 'description' => 'Demo UDDesign manager account'],
     ];
 
     /**
@@ -42,10 +43,17 @@ class UserSeeder extends Seeder
         $hash = Hash::make($password);
 
         foreach (self::USERS as $user) {
-            User::updateOrCreate(
+            $model = User::updateOrCreate(
                 ['email' => $user['email']],
                 ['name' => $user['name'], 'role' => $user['role'], 'password' => $hash]
             );
+
+            // Fill the fake profile only where empty, so edits survive a password reseed
+            $profile = Arr::except($user, ['name', 'email', 'role']) + ['initial' => 'D'];
+            foreach ($profile as $field => $value) {
+                $model->$field ??= $value;
+            }
+            $model->save();
         }
 
         if ($generated) {
