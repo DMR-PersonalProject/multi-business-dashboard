@@ -66,3 +66,10 @@ These changes were made before the baseline commit, so they are already part of 
 - **Files:** `app/Support/ImageUpload.php`, `config/filesystems.php`, `app/Http/Controllers/AccountController.php`, `app/Http/Controllers/UserAccountController.php`, `app/Http/Controllers/BusinessInfoController.php`, `tests/Feature/Security/UploadTest.php`
 - **Change:** all three upload places use one helper. Only JPEG, PNG, GIF and WebP images up to 2 MB are accepted, checked against the file's content (SVG is not accepted). New uploads are stored under a random 40-character name with the extension taken from the file's content, through a new `uploads` disk rooted at `public/`. The bundled default avatar, placeholder images and logos keep their names and keep working. Images uploaded before this change keep their existing names.
 - **Commit:** _pending_
+
+### 7. Feedback text is escaped before it is shown
+
+- **Problem:** customer feedback comes from a public Google Form. When feedback was filtered by date, the name, dish or product and comment were inserted into the page as HTML without escaping, so code typed into a feedback form could run in a logged-in user's browser.
+- **Files:** `resources/views/general/kuwago-one/feedbacks-content.blade.php`, `resources/views/general/kuwago-two/feedbacks-content.blade.php`, `resources/views/general/uddesign/feedbacks-content.blade.php`, `resources/views/feedback/index.blade.php`, `resources/views/uddesignfeedback/index.blade.php`, `tests/Feature/Security/FeedbackEscapingTest.php`
+- **Change:** all five feedback views escape these fields with a small `escapeHtml()` helper before inserting them, so script text is shown as plain text.
+- **Commit:** _pending_

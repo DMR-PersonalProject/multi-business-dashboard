@@ -423,14 +423,14 @@
         items.forEach(item => {
             container.innerHTML += `
             <div class="row align-items-center">
-                <div class="col-lg-6"><b>${item.name} —</b></div>
-                <div class="col-lg-6">${item.dish}</div>
+                <div class="col-lg-6"><b>${escapeHtml(item.name)} —</b></div>
+                <div class="col-lg-6">${escapeHtml(item.dish)}</div>
             </div>
             <div class="row">
                 <div class="col-lg-12">${getStars(item.rating)}</div>
             </div>
             <div class="row">
-                <div class="col-lg-12" style="font-style: italic;">${item.comments}</div>
+                <div class="col-lg-12" style="font-style: italic;">${escapeHtml(item.comments)}</div>
             </div>
             <div class="row mt-1">
                 <div class="col-lg-12 d-flex justify-content-end" style="font-size: 12px;">
@@ -441,6 +441,16 @@
         });
     }
 
+
+    // Feedback text comes from a public form: escape it before inserting as HTML.
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
 
     function getStars(rating) {
         let stars = '';
