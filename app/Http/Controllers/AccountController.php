@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\ImageUpload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
@@ -34,7 +35,7 @@ class AccountController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string|max:510',
-            'user_image' => 'nullable|image',
+            'user_image' => ImageUpload::rules(),
             'email' => 'required|string|email|max:255|unique:users',
             'phone_number' => 'required|string|max:255',
             'password' => 'required|string|min:8',
@@ -81,7 +82,7 @@ class AccountController extends Controller
         $rules=[
             'name' => 'required|string|max:255',
             'description' => 'required|string|max:510',
-            'user_image' => 'nullable|image',
+            'user_image' => ImageUpload::rules(),
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'initial' => 'required|string|max:255',
@@ -94,15 +95,14 @@ class AccountController extends Controller
         
         if (!$user->user_image) {
             // Only require image if none exists
-            $rules['user_image'] = 'required|image';
+            $rules['user_image'] = ImageUpload::rules(required: true);
         }
     
         $validatedData = $request->validate($rules);
     
         // Handle image upload if new image is provided
         if ($request->hasFile('user_image')) {
-            $fileName = time() . $request->file('user_image')->getClientOriginalName();
-            $request->file('user_image')->move(public_path('user_images'), $fileName);
+            $fileName = ImageUpload::store($request->file('user_image'), 'user_images');
             $validatedData['user_image'] = $fileName;
         }
         

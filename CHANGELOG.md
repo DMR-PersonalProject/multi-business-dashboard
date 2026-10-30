@@ -59,3 +59,10 @@ These changes were made before the baseline commit, so they are already part of 
 - **Files:** `database/seeders/UserSeeder.php`, `database/seeders/DatabaseSeeder.php`, `.env.example`, `tests/Feature/Security/UserSeederTest.php`
 - **Change:** the demo password is read from `SEED_USER_PASSWORD`. If that is empty, a random 16-character password is generated and printed once in the seeding output. The seeder refuses to run when `APP_ENV=production`, can be run again without creating duplicates, and is now called by `DatabaseSeeder`. `.env.example` has an empty `SEED_USER_PASSWORD` entry.
 - **Commit:** _pending_
+
+### 6. Safer image uploads
+
+- **Problem:** uploaded pictures (user photos, business images and logos) were saved in web-served folders under the name and extension chosen by the uploader, with no size limit and no explicit list of allowed formats.
+- **Files:** `app/Support/ImageUpload.php`, `config/filesystems.php`, `app/Http/Controllers/AccountController.php`, `app/Http/Controllers/UserAccountController.php`, `app/Http/Controllers/BusinessInfoController.php`, `tests/Feature/Security/UploadTest.php`
+- **Change:** all three upload places use one helper. Only JPEG, PNG, GIF and WebP images up to 2 MB are accepted, checked against the file's content (SVG is not accepted). New uploads are stored under a random 40-character name with the extension taken from the file's content, through a new `uploads` disk rooted at `public/`. The bundled default avatar, placeholder images and logos keep their names and keep working. Images uploaded before this change keep their existing names.
+- **Commit:** _pending_

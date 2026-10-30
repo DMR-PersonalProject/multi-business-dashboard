@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\ImageUpload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -36,7 +37,7 @@ class UserAccountController extends Controller
         $rules=[
             'name' => 'required|string|max:255',
             'description' => 'required|string|max:255',
-            'user_image' => 'nullable|image',
+            'user_image' => ImageUpload::rules(),
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'initial' => 'required|string|max:255',
@@ -48,15 +49,14 @@ class UserAccountController extends Controller
         
         if (!$user->user_image) {
             // Only require image if none exists
-            $rules['user_image'] = 'required|image';
+            $rules['user_image'] = ImageUpload::rules(required: true);
         }
     
         $validatedData = $request->validate($rules);
     
         // Handle image upload if new image is provided
         if ($request->hasFile('user_image')) {
-            $fileName = time() . $request->file('user_image')->getClientOriginalName();
-            $request->file('user_image')->move(public_path('user_images'), $fileName);
+            $fileName = ImageUpload::store($request->file('user_image'), 'user_images');
             $validatedData['user_image'] = $fileName;
         }
         

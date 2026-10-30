@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BusinessInfo;
+use App\Support\ImageUpload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
@@ -24,21 +25,19 @@ class BusinessInfoController extends Controller
     {
         $validatedData = $request->validate([
             'business_name' => 'required|string',
-            'business_logo' => 'required|image',
-            'business_image' => 'required|image',
+            'business_logo' => ImageUpload::rules(required: true),
+            'business_image' => ImageUpload::rules(required: true),
             'year' => 'required|integer',
             'business_type' => 'required|string',
             'location' => 'required|string',
             'description' => 'required|string',
         ]);
         if ($request->hasFile('business_image')) {
-            $fileName = time() . $request->file('business_image')->getClientOriginalName();
-            $request->file('business_image')->move(public_path('business_images'), $fileName);
+            $fileName = ImageUpload::store($request->file('business_image'), 'business_images');
             $validatedData['business_image'] = $fileName;
         }
         if ($request->hasFile('business_logo')) {
-            $fileName = time() . $request->file('business_logo')->getClientOriginalName();
-            $request->file('business_logo')->move(public_path('business_logos'), $fileName);
+            $fileName = ImageUpload::store($request->file('business_logo'), 'business_logos');
             $validatedData['business_logo'] = $fileName;
         }
         BusinessInfo::create($validatedData);
@@ -56,8 +55,8 @@ class BusinessInfoController extends Controller
         $data = BusinessInfo::findOrFail($id);
         $rules = [
             'business_name' => 'required|string',
-            'business_logo' => 'nullable|image',
-            'business_image' => 'nullable|image',
+            'business_logo' => ImageUpload::rules(),
+            'business_image' => ImageUpload::rules(),
             'year' => 'required|integer',
             'business_type' => 'required|string',
             'location' => 'required|string',
@@ -66,24 +65,22 @@ class BusinessInfoController extends Controller
 
         if (!$data->business_logo) {
             // Only require image if none exists
-            $rules['business_logo'] = 'required|image';
+            $rules['business_logo'] = ImageUpload::rules(required: true);
         }
 
         if (!$data->business_image) {
             // Only require image if none exists
-            $rules['business_image'] = 'required|image';
+            $rules['business_image'] = ImageUpload::rules(required: true);
         }
     
         $validatedData = $request->validate($rules);
 
         if ($request->hasFile('business_image')) {
-            $fileName = time() . $request->file('business_image')->getClientOriginalName();
-            $request->file('business_image')->move(public_path('business_images'), $fileName);
+            $fileName = ImageUpload::store($request->file('business_image'), 'business_images');
             $validatedData['business_image'] = $fileName;
         }
         if ($request->hasFile('business_logo')) {
-            $fileName = time() . $request->file('business_logo')->getClientOriginalName();
-            $request->file('business_logo')->move(public_path('business_logos'), $fileName);
+            $fileName = ImageUpload::store($request->file('business_logo'), 'business_logos');
             $validatedData['business_logo'] = $fileName;
         }
         

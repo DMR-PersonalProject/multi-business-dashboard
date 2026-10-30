@@ -45,6 +45,15 @@ return [
             'throw' => false,
         ],
 
+        // User and business images, served directly from public/ (user_images, business_images, business_logos).
+        'uploads' => [
+            'driver' => 'local',
+            'root' => public_path(),
+            'url' => env('APP_URL'),
+            'visibility' => 'public',
+            'throw' => true,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
