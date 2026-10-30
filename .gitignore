@@ -1,0 +1,38 @@
+/.phpunit.cache
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/vendor
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+auth.json
+npm-debug.log
+yarn-error.log
+/.fleet
+/.idea
+/.vscode
+/.zed
+
+# Local-only files
+CLAUDE.md
+RECOMMENDATIONS.md
+.env.testing
+/storage/logs/*.log
+
+# Uploaded images: keep only defaults, placeholders and the app logo
+/public/user_images/*
+!/public/user_images/.gitkeep
+!/public/user_images/default_user_image.png
+!/public/user_images/1730856351a single logo.png
+/public/business_images/*
+!/public/business_images/.gitkeep
+!/public/business_images/placeholder-kuwago-one.png
+!/public/business_images/placeholder-kuwago-two.png
+!/public/business_images/1730854574a single logo.png
