@@ -52,3 +52,10 @@ These changes were made before the baseline commit, so they are already part of 
   - Kuwago target-sale data, the Kuwago feedback page and filter: login + owner, general or kuwago role.
   - Choosing the displayed target sale: login + owner role.
 - **Commit:** _pending_
+
+### 5. Demo accounts no longer use hardcoded weak passwords
+
+- **Problem:** the demo accounts were created with short, hardcoded passwords that are visible in the repository, so anyone could log in as the owner on any install that ran the seeder. The seeder could also run in production, and `php artisan db:seed` did not create the demo accounts at all.
+- **Files:** `database/seeders/UserSeeder.php`, `database/seeders/DatabaseSeeder.php`, `.env.example`, `tests/Feature/Security/UserSeederTest.php`
+- **Change:** the demo password is read from `SEED_USER_PASSWORD`. If that is empty, a random 16-character password is generated and printed once in the seeding output. The seeder refuses to run when `APP_ENV=production`, can be run again without creating duplicates, and is now called by `DatabaseSeeder`. `.env.example` has an empty `SEED_USER_PASSWORD` entry.
+- **Commit:** _pending_
