@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\UddesignFeedback;
 use App\Services\UdGoogleSheetsService;
+use App\Support\SheetFeedbackRows;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class UddesignFeedbackController extends Controller
 {
@@ -15,21 +18,34 @@ class UddesignFeedbackController extends Controller
         $this->googleSheetsService = $googleSheetsService;
     }
 
+    // Reads and checks every sheet row first; replaces stored feedback only if all are valid.
     public function fetchAndStoreFeedback()
     {
-        UddesignFeedback::truncate();
-        $feedbackData = $this->googleSheetsService->getSheetData('Uddesign!A2:F');
+        try {
+            $feedbackData = $this->googleSheetsService->getSheetData('Uddesign!A2:F');
+        } catch (\Throwable $e) {
+            Log::warning('UDDesign feedback import failed: '.$e->getMessage());
+            return redirect()->route('general.uddesign.feedbacks')->with('failed', 'Could not read the feedback sheet. No data was changed.');
+        }
 
-        foreach ($feedbackData as $feedback) {
-            UddesignFeedback::create([
+        try {
+            $rows = SheetFeedbackRows::map($feedbackData, fn (array $feedback) => [
                 'name' => $feedback[1],
                 'feedback_type' => $feedback[2],
                 'product_name' => $feedback[3],
                 'comments' => $feedback[4],
                 'rating' => (int)$feedback[5],
-                'feedback_date' => \Carbon\Carbon::createFromFormat('d/m/Y H:i:s', $feedback[0]),
             ]);
+        } catch (\UnexpectedValueException $e) {
+            return redirect()->route('general.uddesign.feedbacks')->with('failed', $e->getMessage().' No data was changed.');
         }
+
+        DB::transaction(function () use ($rows) {
+            UddesignFeedback::query()->delete();
+            foreach ($rows as $row) {
+                UddesignFeedback::create($row);
+            }
+        });
 
         return redirect()->route('general.uddesign.feedbacks')->with('success', 'Feedback saved successfully!');
     }

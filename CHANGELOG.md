@@ -31,3 +31,14 @@ These changes were made before the baseline commit, so they are already part of 
 - **Files:** `app/Http/Controllers/UserAccountController.php`, `resources/views/settings/account-edit.blade.php`, `tests/Feature/Security/SelfRoleChangeTest.php`
 - **Change:** the settings update no longer accepts or saves a role. The role is shown read-only on the settings page. Only the owner can change roles, from account management.
 - **Commit:** _pending_
+
+### 3. Data refresh and feedback import are owner-only, CSRF-protected and safe on failure
+
+- **Problem:** the data refresh (`GET /api/refresh-data/{type}`) and the feedback imports (`GET /feedback/import-one`, `/feedback/import-two`, `/uddesignfeedback/fetch`) changed data on a simple GET request. The imports did not require a login, and the refresh worked for any logged-in user. They emptied tables before checking the new data, so a failed or malformed response could leave tables empty, and the refresh reported success even when it had failed.
+- **Files:** `routes/web.php`, `routes/api.php`, `app/Http/Controllers/Api/DataController.php`, `app/Http/Controllers/FeedbackController.php`, `app/Http/Controllers/UddesignFeedbackController.php`, `app/Support/SheetFeedbackRows.php`, `resources/views/general/footer.blade.php`, `resources/views/uddesignfeedback/index.blade.php`, `tests/Feature/Security/DataRefreshTest.php`, `tests/Feature/Security/FeedbackImportTest.php`
+- **Change:**
+  - The routes are now `POST /refresh-data/{type}`, `POST /feedback/import-one`, `POST /feedback/import-two` and `POST /uddesignfeedback/fetch`. They require login and the owner role, need a CSRF token, and are limited to 5 requests per minute. `{type}` must be `uddesign`, `kuwago_one` or `kuwago_two`.
+  - Every API endpoint and every sheet row is fetched and checked first. If anything is missing or invalid, nothing is deleted and an error message is shown.
+  - Tables are replaced inside one database transaction (rows are deleted, not truncated, so the change can be rolled back).
+  - The refresh buttons are shown only to owners. Other roles get a plain page reload. An invalid nested form in the footer was removed.
+- **Commit:** _pending_

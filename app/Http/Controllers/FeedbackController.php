@@ -6,7 +6,9 @@ use App\Models\Feedback;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Services\GoogleSheetService;
+use App\Support\SheetFeedbackRows;
 
 class FeedbackController extends Controller
 {
@@ -19,47 +21,48 @@ class FeedbackController extends Controller
 
     public function importFeedbackOne()
     {
-        // Optionally, clear old feedback
-        Feedback::truncate(); // This will delete all existing feedback records
-
-        $data = $this->googleSheetService->getSheetData('Kuwago1!A2:F');
-
-        foreach ($data as $row) {
-            Feedback::create([
-                'name' => $row[1],
-                'feedback_type' => $row[2],
-                'dish' => $row[3],
-                'comments' => $row[4],
-                'rating' => $row[5],
-                'feedback_date' => \Carbon\Carbon::createFromFormat('d/m/Y H:i:s', $row[0]),
-            ]);
-        }
-
-        return redirect()
-            ->route('general.kuwago-one.feedbacks')
-            ->with('success', 'Feedback imported successfully.');
+        return $this->replaceFeedback('Kuwago1!A2:F', 'general.kuwago-one.feedbacks');
     }
 
     public function importFeedbackTwo()
     {
-        // Optionally, clear old feedback
-        Feedback::truncate(); // This will delete all existing feedback records
+        return $this->replaceFeedback('Kuwago1!A2:F', 'general.kuwago-two.feedbacks');
+    }
 
-        $data = $this->googleSheetService->getSheetData('Kuwago1!A2:F');
+    /**
+     * Read and check every sheet row first; replace the stored feedback only
+     * if all rows are valid, inside one transaction.
+     */
+    private function replaceFeedback(string $range, string $redirectRoute)
+    {
+        try {
+            $data = $this->googleSheetService->getSheetData($range);
+        } catch (\Throwable $e) {
+            Log::warning('Feedback import failed: '.$e->getMessage());
+            return redirect()->route($redirectRoute)->with('failed', 'Could not read the feedback sheet. No data was changed.');
+        }
 
-        foreach ($data as $row) {
-            Feedback::create([
+        try {
+            $rows = SheetFeedbackRows::map($data, fn (array $row) => [
                 'name' => $row[1],
                 'feedback_type' => $row[2],
                 'dish' => $row[3],
                 'comments' => $row[4],
                 'rating' => $row[5],
-                'feedback_date' => \Carbon\Carbon::createFromFormat('d/m/Y H:i:s', $row[0]),
             ]);
+        } catch (\UnexpectedValueException $e) {
+            return redirect()->route($redirectRoute)->with('failed', $e->getMessage().' No data was changed.');
         }
 
+        DB::transaction(function () use ($rows) {
+            Feedback::query()->delete();
+            foreach ($rows as $row) {
+                Feedback::create($row);
+            }
+        });
+
         return redirect()
-            ->route('general.kuwago-two.feedbacks')
+            ->route($redirectRoute)
             ->with('success', 'Feedback imported successfully.');
     }
 

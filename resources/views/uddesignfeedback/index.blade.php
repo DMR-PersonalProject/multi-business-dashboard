@@ -207,9 +207,14 @@
                                     <h4 class="mb-3">Complaints</h4>
                                 </div>
                                 <div class="col-lg-6 d-flex justify-content-end">
-                                    <a href="{{ url('uddesignfeedback/fetch') }}"><i
-                                            class="fa-solid fa-arrows-rotate text-white text"></i>
-                                    </a>
+                                    @if (auth()->user()?->role === 'owner')
+                                    <form action="{{ route('uddesignfeedback.fetch') }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="btn p-0 border-0 bg-transparent"><i
+                                                class="fa-solid fa-arrows-rotate text-white text"></i>
+                                        </button>
+                                    </form>
+                                    @endif
                                 </div>
                             </div>
 

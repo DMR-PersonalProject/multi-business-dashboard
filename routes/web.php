@@ -16,6 +16,7 @@ use App\Http\Controllers\Executive\ExecutiveController;
 use App\Http\Controllers\KuwagoOne\Kuwago_OneController;
 use App\Http\Controllers\KuwagoTwo\Kuwago_TwoController;
 use App\Http\Controllers\KuwagoOne\CompareWithController;
+use App\Http\Controllers\Api\DataController;
 
 
 Route::get('/', function () {
@@ -38,13 +39,10 @@ Route::get('page2', function () {
 
 
 Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
-Route::get('/feedback/import-one', [FeedbackController::class, 'importFeedbackOne']);
-Route::get('/feedback/import-two', [FeedbackController::class, 'importFeedbackTwo']);
 Route::post('/feedback/filter-by-date', [FeedbackController::class, 'filterByDate'])->name('feedback.filterByDate');
 
 
 Route::get('/uddesignfeedback', [UddesignFeedbackController::class, 'index'])->name('uddesignfeedback.index');
-Route::get('/uddesignfeedback/fetch', [UddesignFeedbackController::class, 'fetchAndStoreFeedback']);
 Route::post('/uddesignfeedback/filter-by-date', [UddesignFeedbackController::class, 'filterByDate'])->name('uddesignfeedback.filterByDate');
 
 
@@ -94,6 +92,16 @@ Route::middleware(['auth', 'role:owner'])->group(function () {
     Route::resource('promos', PromoController::class);
     Route::resource('targetSales', TargetSalesController::class);
     Route::resource('budgetAllocations', BudgetAllocationController::class);
+
+    // These replace stored data, so they are POST (CSRF-protected) and rate limited.
+    Route::middleware('throttle:5,1')->group(function () {
+        Route::post('refresh-data/{type}', [DataController::class, 'refreshData'])
+            ->whereIn('type', DataController::TYPES)
+            ->name('refresh.data');
+        Route::post('feedback/import-one', [FeedbackController::class, 'importFeedbackOne'])->name('feedback.import-one');
+        Route::post('feedback/import-two', [FeedbackController::class, 'importFeedbackTwo'])->name('feedback.import-two');
+        Route::post('uddesignfeedback/fetch', [UddesignFeedbackController::class, 'fetchAndStoreFeedback'])->name('uddesignfeedback.fetch');
+    });
 });
 Route::resource('deals', DealController::class);
 Route::get('/fetch-target-sale', [Kuwago_OneController::class, 'general_kuwago_one_new'])->name('general.kuwago-one.sale');

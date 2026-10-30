@@ -164,53 +164,33 @@
             <div class="col-2 d-flex flex-grow-1 justify-content-end align-items-center text-center">
 
 
-                {{-- KUWAGO ONE REFRESH BUTTON --}}
-                @if(request()->routeIs(['general.kuwago-one.dashboard', 'general.kuwago-one.sales', 'general.kuwago-one.expenses', 'general.kuwago-one.feedbacks']))
-                    @if(str_contains(request()->url(), '/feedbacks'))
-                        <form action="{{ url('feedback/import-one') }}" method="GET">
-                    @else
-                        <form action="{{ route('refresh.data', ['type' => 'kuwago_one']) }}" method="GET">
-                    @endif
-                    <button class="align-items-center rounded-5 border-0 bg-white" type="submit">
-                        <img src="{{ asset('assets/images/icons/refresh-icon.png') }}" style="height: 40px; object-fit: cover;" alt="Refresh Icon">
-                    </button>
-                    </form>
-                    @elseif(request()->routeIs(['general.kuwago-one.promos']))
-                    <button class="align-items-center rounded-5 border-0 bg-white" type="button" onclick="location.reload()">
-                        <img src="{{ asset('assets/images/icons/refresh-icon.png') }}" style="height: 40px; object-fit: cover;" alt="Refresh Icon">
-                    </button>
-                @endif
+                {{-- Data refresh and feedback import replace stored data: owner only, POST + CSRF.
+                     Other roles get a plain page reload. --}}
+                @php
+                    $refreshAction = null;
+                    if (request()->routeIs('general.kuwago-one.feedbacks')) {
+                        $refreshAction = route('feedback.import-one');
+                    } elseif (request()->routeIs(['general.kuwago-one.dashboard', 'general.kuwago-one.sales', 'general.kuwago-one.expenses'])) {
+                        $refreshAction = route('refresh.data', ['type' => 'kuwago_one']);
+                    } elseif (request()->routeIs('general.kuwago-two.feedbacks')) {
+                        $refreshAction = route('feedback.import-two');
+                    } elseif (request()->routeIs(['general.kuwago-two.dashboard', 'general.kuwago-two.sales', 'general.kuwago-two.expenses'])) {
+                        $refreshAction = route('refresh.data', ['type' => 'kuwago_two']);
+                    } elseif (request()->routeIs('general.uddesign.feedbacks')) {
+                        $refreshAction = route('uddesignfeedback.fetch');
+                    } elseif (request()->routeIs(['general.uddesign.dashboard', 'general.uddesign.sales', 'general.uddesign.expenses'])) {
+                        $refreshAction = route('refresh.data', ['type' => 'uddesign']);
+                    }
+                @endphp
 
-                {{-- KUWAGO TWO REFRESH BUTTON --}}
-                @if(request()->routeIs(['general.kuwago-two.dashboard', 'general.kuwago-two.sales', 'general.kuwago-two.expenses', 'general.kuwago-two.feedbacks']))
-                    @if(str_contains(request()->url(), '/feedbacks'))
-                        <form action="{{ url('feedback/import-two') }}" method="GET">
-                    @else
-                        <form action="{{ route('refresh.data', ['type' => 'kuwago_two']) }}" method="GET">
-                    @endif
+                @if($refreshAction && auth()->user()?->role === 'owner')
+                <form action="{{ $refreshAction }}" method="POST">
+                    @csrf
                     <button class="align-items-center rounded-5 border-0 bg-white" type="submit">
                         <img src="{{ asset('assets/images/icons/refresh-icon.png') }}" style="height: 40px; object-fit: cover;" alt="Refresh Icon">
                     </button>
                 </form>
-                @elseif(request()->routeIs(['general.kuwago-two.promos']))
-                <button class="align-items-center rounded-5 border-0 bg-white" type="button" onclick="location.reload()">
-                    <img src="{{ asset('assets/images/icons/refresh-icon.png') }}" style="height: 40px; object-fit: cover;" alt="Refresh Icon">
-                </button>
-                @endif
-
-                {{-- UDDESIGN REFRESH BUTTON --}}
-                @if(request()->routeIs(['general.uddesign.dashboard', 'general.uddesign.sales', 'general.uddesign.expenses', 'general.uddesign.feedbacks']))
-                    @if(str_contains(request()->url(), '/feedbacks'))
-                        <form action="{{ url('uddesignfeedback/fetch') }}" method="GET">
-                    @else
-                        <form action="{{ route('refresh.data', ['type' => 'uddesign']) }}" method="GET">
-                    @endif
-                <form action="{{ route('refresh.data', ['type' => 'uddesign']) }}" method="GET">
-                    <button class="align-items-center rounded-5 border-0 bg-white" type="submit">
-                        <img src="{{ asset('assets/images/icons/refresh-icon.png') }}" style="height: 40px; object-fit: cover;" alt="Refresh Icon">
-                    </button>
-                </form>
-                @elseif(request()->routeIs(['general.uddesign.uddeals']))
+                @elseif($refreshAction || request()->routeIs(['general.kuwago-one.promos', 'general.kuwago-two.promos', 'general.uddesign.uddeals']))
                 <button class="align-items-center rounded-5 border-0 bg-white" type="button" onclick="location.reload()">
                     <img src="{{ asset('assets/images/icons/refresh-icon.png') }}" style="height: 40px; object-fit: cover;" alt="Refresh Icon">
                 </button>
