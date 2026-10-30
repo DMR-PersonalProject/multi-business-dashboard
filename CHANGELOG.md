@@ -42,3 +42,13 @@ These changes were made before the baseline commit, so they are already part of 
   - Tables are replaced inside one database transaction (rows are deleted, not truncated, so the change can be rolled back).
   - The refresh buttons are shown only to owners. Other roles get a plain page reload. An invalid nested form in the footer was removed.
 - **Commit:** _pending_
+
+### 4. Routes that had no login check now require login and the right role
+
+- **Problem:** some routes could be used without logging in: the deals pages (including creating, editing and deleting deals with client contact details), the Kuwago target-sale data, choosing which target sale is displayed, and the old standalone feedback pages and their date filters.
+- **Files:** `routes/web.php`, `tests/Feature/Security/RouteAccessTest.php`
+- **Change:**
+  - Deals and the UDDesign feedback page and filter: login + owner, general or uddesign role.
+  - Kuwago target-sale data, the Kuwago feedback page and filter: login + owner, general or kuwago role.
+  - Choosing the displayed target sale: login + owner role.
+- **Commit:** _pending_

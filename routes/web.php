@@ -38,12 +38,17 @@ Route::get('page2', function () {
 })->name('general.executive.page2');
 
 
-Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
-Route::post('/feedback/filter-by-date', [FeedbackController::class, 'filterByDate'])->name('feedback.filterByDate');
+Route::middleware(['auth', 'kuwagoRole:owner,general,kuwago'])->group(function () {
+    Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
+    Route::post('/feedback/filter-by-date', [FeedbackController::class, 'filterByDate'])->name('feedback.filterByDate');
+    Route::get('/fetch-target-sale', [Kuwago_OneController::class, 'general_kuwago_one_new'])->name('general.kuwago-one.sale');
+});
 
-
-Route::get('/uddesignfeedback', [UddesignFeedbackController::class, 'index'])->name('uddesignfeedback.index');
-Route::post('/uddesignfeedback/filter-by-date', [UddesignFeedbackController::class, 'filterByDate'])->name('uddesignfeedback.filterByDate');
+Route::middleware(['auth', 'uddesignRole:owner,general,uddesign'])->group(function () {
+    Route::get('/uddesignfeedback', [UddesignFeedbackController::class, 'index'])->name('uddesignfeedback.index');
+    Route::post('/uddesignfeedback/filter-by-date', [UddesignFeedbackController::class, 'filterByDate'])->name('uddesignfeedback.filterByDate');
+    Route::resource('deals', DealController::class);
+});
 
 
 
@@ -102,10 +107,9 @@ Route::middleware(['auth', 'role:owner'])->group(function () {
         Route::post('feedback/import-two', [FeedbackController::class, 'importFeedbackTwo'])->name('feedback.import-two');
         Route::post('uddesignfeedback/fetch', [UddesignFeedbackController::class, 'fetchAndStoreFeedback'])->name('uddesignfeedback.fetch');
     });
+
+    Route::post('/target-sales/display/{id}', [TargetSalesController::class, 'setDisplayTargetSale'])->name('target.sales.display');
 });
-Route::resource('deals', DealController::class);
-Route::get('/fetch-target-sale', [Kuwago_OneController::class, 'general_kuwago_one_new'])->name('general.kuwago-one.sale');
-Route::post('/target-sales/display/{id}', [TargetSalesController::class, 'setDisplayTargetSale'])->name('target.sales.display');
 
 
 require __DIR__ . '/auth.php';
